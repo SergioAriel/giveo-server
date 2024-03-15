@@ -1,0 +1,49 @@
+  {
+    "compilerOptions": {
+      "target": "esnext",
+      "module": "commonjs", // Cambia a "commonjs" para que funcione con Node.js
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "preserveConstEnums": true,
+      "allowSyntheticDefaultImports": true,
+      "strict": true,
+      "forceConsistentCasingInFileNames": true,
+      "noEmit": true,
+      "skipLibCheck": true,
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "declaration": true,
+      "experimentalDecorators": true,
+      "strictPropertyInitialization": false,
+      "skipDefaultLibCheck": true,
+      "baseUrl": "./", // Cambia a la ruta adecuada si es necesario
+      "outDir": "./out/server",
+      "paths": {
+        "@/*": [
+          "./server/*"
+        ] // Ajusta según la estructura de tu proyecto
+      },
+      "lib": [
+        "dom",
+        "dom.iterable",
+        "esnext"
+      ],
+      "allowJs": true,
+      "incremental": true,
+      "plugins": [
+        {
+          "name": "next"
+        }
+      ]
+    },
+    "include": [
+      "**/*.ts",
+      "**/*.d.ts",
+    ],
+    "exclude": [
+      "node_modules",
+      "src-tauri"
+    ]
+  }
