@@ -1,9 +1,11 @@
 import * as fs from "fs"
 import { PathOrFileDescriptor, createWriteStream } from "fs";
-import { execSync, spawn, spawnSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 import * as path from "path";
 import { Socket } from "socket.io";
 import { randomUUID } from "crypto";
+import * as pty from 'node-pty';
+// import * as os from 'os';
 
 export const write = (socket: Socket) => {
     socket.on("write", ({ absolutePath, text }: { absolutePath: string, text: string }) => {
@@ -22,11 +24,6 @@ export const read = (socket: Socket) => {
                 fs.readFile(absolutePath as PathOrFileDescriptor, (_error, data) => {
                     const splitDots = absolutePath.split(".");
                     const extension = splitDots[splitDots.length - 1]
-                    console.log({
-                        file: data.toString(),
-                        absolutePath,
-                        extension
-                    })
                     socket.emit("setData", {
                         file: data.toString(),
                         absolutePath,
@@ -40,52 +37,53 @@ export const read = (socket: Socket) => {
     })
 }
 
+// Keep for piping support
 
-export const commandTerminal = (socket: Socket) => {
-    socket.on("command", async (textCommand: string) => {
-        try {
+export const commandTerminal = async (socket: Socket) => {
+    const dir = path.join(process.cwd() + "/../app")
+    // const shell = os.platform() === 'win32' ? 'powershell.exe' : 'zsh';
+    const terminal = await pty?.spawn('/bin/sh', [], {
+        name: 'xterm-color', // Set a suitable terminal name (adjust if needed)
+        cols: 80,
+        rows: 30,
+        cwd: dir, // Set the working directory
+    });
 
-            const command = textCommand.split(" ")[0];
-            const args = textCommand.split(" ").slice(1);
-            const dir = path.join(process.cwd() + "/../app")
-            const executeCommand = spawn(command, args, { cwd: dir, stdio: 'pipe' });
+    // Handle terminal output (stdout) and send it to the client
+    let commandInput = ""
 
-            executeCommand.stdout.on('data', async (data) => {
-                try {
-                    const respData = data.toString();
-                    await socket.emit("command", respData);
-                    socket.emit("pipe-shift", executeCommand.stdin.writable);
-                } catch (error) {
-                    console.log(error)
-                }
-            });
-
-            executeCommand.stdin.on("error", (error) => {
-                socket.emit("command", `Error en la tubería de entrada: ${error}`);
-            });
-
-            socket.on("input-pipe", async (inputCommand) => {
-                executeCommand.stdin.write(`${inputCommand}${'\n'}`);
-            });
-
-            executeCommand.stdout.on('close', (stream: any) => {
-                socket.emit("pipe-shift", stream);
-            });
-
-            executeCommand.on('error', (error) => {
-                socket.emit("command", `Error al ejecutar el comando '${command}': ${error}`);
-            });
-
-
-        } catch (error) {
-            console.error("Error general:", error);
-            socket.emit("command", `Error general: ${error}`);
+    terminal?.onData((data) => {
+        if (commandInput?.replace(/\\n\\b/g, "")?.trim() !== data?.replace(/\\n\\b/g, "")?.trim()) {
+            socket.emit('command', data.toString());
         }
     });
-    // socket.on("keyArrow", async (inputCommand: any) => {
 
-    // });
-}
+    // Handle input from the client and send it to the terminal (stdin)
+    socket.on('command', (input: any) => {
+        console.log(input)
+        terminal?.write(`${input}\n`);
+        commandInput = input
+    });
+
+    // Handle socket events for handling arrow keys and other interactions:
+
+    socket.on('keyArrow', (key) => {
+        // Handle arrow key presses appropriately (explained later)
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+            const arrows = {
+                ArrowUp: 'A',
+                ArrowDown: 'B',
+                ArrowLeft: 'D',
+                ArrowRight: 'C'
+            }
+            // Send corresponding arrow key sequence to the terminal
+            terminal?.write(`\x1b[${arrows[key as keyof typeof arrows]}`); // Example for arrow down
+        }
+    });
+
+    // ... (remaining event handlers for other interactive features)
+};
+
 
 
 // CORREGIR LA RUTA DEL REPO Y CORRER COMANDOS DE CONFIG.NAME CONFIG.EMAIL
@@ -169,7 +167,6 @@ export const getCommits = (socket: Socket) => {
         if (followFile) {
             const changedFiles = execSync('git diff-tree --no-commit-id --name-only -r HEAD', { cwd: dir }).toString().trim().split('\n');
             const absolutePathFollow = path.join(dir, `/${changedFiles[0]}`)
-            console.log("164", absolutePathFollow)
             read(absolutePathFollow)
         } else {
             read(absolutePath)

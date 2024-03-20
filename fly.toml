@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for giveo-server on 2024-03-05T13:38:53-03:00
+# fly.toml app configuration file generated for giveo-server on 2024-03-20T15:43:13-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = 'giveo-server'
-primary_region = 'eze'
+primary_region = 'scl'
 
 [build]
 
@@ -20,6 +20,3 @@ primary_region = 'eze'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
-  
-[env]
-  HOSTNAME = "0.0.0.0"
