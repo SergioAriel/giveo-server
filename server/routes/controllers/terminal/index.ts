@@ -22,12 +22,12 @@ export const runTerminal = (req: Request, res: Response) => {
             message: "complete"
           });
         } 
-        // else {
-        //   res.status(500).json({
-        //     status: "Error",
-        //     message: "Command execution failed"
-        //   });
-        // }
+        else {
+          res.status(500).json({
+            status: "Error",
+            message: "Command execution failed"
+          });
+        }
       });
   
       executeCommand.on('error', (err) => {

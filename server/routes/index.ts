@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { git, terminal } from './controllers';
+import { directory, git, terminal } from './controllers';
 
 const router = Router();
 
@@ -15,6 +15,7 @@ router.get('/', (_req, res) => {
 router.get("/git/gitLog", git.gitLog)
 router.post("/git/gitClone", git.gitClone)
 router.post("/git/gitInit", git.gitInit)
+router.delete("/directory/deleteFile", directory.deleteFile)
 router.post("/terminal", terminal.runTerminal)
 
 

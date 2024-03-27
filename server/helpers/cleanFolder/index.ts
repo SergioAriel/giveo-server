@@ -4,14 +4,14 @@ import * as path from "path"
 export const cleanFolder = async (directory: string): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
         try {
-            const archivos = fs.readdirSync(directory);
-            archivos.forEach((archivo: string) => {
-                const archivoRuta = path.join(directory, archivo);
-                if (archivoRuta && fs.statSync(archivoRuta).isDirectory()) {
-                    cleanFolder(archivoRuta);
-                    fs.rmdirSync(archivoRuta);
+            const file = fs.readdirSync(directory);
+            file.forEach((archivo: string) => {
+                const filePath = path.join(directory, archivo);
+                if (filePath && fs.statSync(filePath).isDirectory()) {
+                    cleanFolder(filePath);
+                    fs.rmdirSync(filePath);
                 } else {
-                    fs.unlinkSync(archivoRuta);
+                    fs.unlinkSync(filePath);
                 }
             });
             resolve();
